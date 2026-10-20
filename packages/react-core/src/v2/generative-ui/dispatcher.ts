@@ -1,6 +1,8 @@
 import {
   callerProblem,
   functionCallers,
+  GENERATIVE_UI_AGENT_FUNCTION_CALLS,
+  GENERATIVE_UI_AGENT_FUNCTION_CALLS_OFF_REASON,
   GENERATIVE_UI_FUNCTIONS,
 } from "@copilotkit/shared";
 import type {
@@ -265,6 +267,12 @@ export function createGenerativeUIDispatcher(
     origin: GenerativeUICallOrigin,
   ) => {
     const isComponent = "componentId" in origin;
+    if (!isComponent && !GENERATIVE_UI_AGENT_FUNCTION_CALLS) {
+      return new GenerativeUIError(
+        "invalid_function_call",
+        GENERATIVE_UI_AGENT_FUNCTION_CALLS_OFF_REASON,
+      );
+    }
     const problem = callerProblem(name, fn, isComponent ? "renderer" : "agent");
     if (problem !== undefined) {
       return new GenerativeUIError("invalid_function_call", problem);
