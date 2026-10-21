@@ -8,6 +8,7 @@ import { BrandNav } from "@/components/brand-nav";
 import { FrameworkProvider } from "@/components/framework-provider";
 import { PublicClerkProvider } from "@/components/public-clerk-provider";
 import { ShellSearchProvider } from "@/components/search-trigger";
+import { BANNER_INIT_SCRIPT } from "@/lib/banner-dismissal";
 import { PostHogProvider } from "@/lib/providers/posthog-provider";
 import { ScarfPixel } from "@/lib/providers/scarf-pixel";
 import { getIntegrations } from "@/lib/registry";
@@ -111,6 +112,16 @@ export default function RootLayout({
         <script
           id="__showcase_config__"
           dangerouslySetInnerHTML={{ __html: injection }}
+        />
+        {/* Mark a dismissed announcement banner on <html> before the body
+         * is parsed. The banner is server-rendered, and globals.css hides
+         * it and sets --fd-banner-height from this attribute, so the first
+         * paint already has the final layout instead of shifting once
+         * Banners hydrates. A raw parse-time <script> for the same reason
+         * as the config script above. See lib/banner-dismissal.ts. */}
+        <script
+          id="banner-init"
+          dangerouslySetInnerHTML={{ __html: BANNER_INIT_SCRIPT }}
         />
         {/* Apply the persisted theme before first paint to avoid a
          * light-flash on dark-preferring loads. Reads `localStorage.theme`

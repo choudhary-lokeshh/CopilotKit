@@ -29,9 +29,13 @@
  *     see below — but it's load-bearing on mobile to leave space for
  *     the fixed mobile nav).
  *
- * --fd-banner-height is set dynamically by Banners (40px / 0px). */
+ * --fd-banner-height is 40px while the announcement banner shows and 0px
+ * once it's dismissed. The dismissal is read from localStorage before first
+ * paint by the inline script in layout.tsx (see lib/banner-dismissal.ts),
+ * so the server-rendered layout never shifts. */
 :root {
   --fd-nav-height: 64px;
+  --fd-banner-height: 40px;
   /* Keep the desktop docs shell inside one centered editorial frame. This is
    * wide enough for comfortable prose, demos, and a TOC without returning the
    * sidebar to the browser edge like the previous 97rem default did. */
@@ -508,6 +512,17 @@
 
 #shell-docs-course-banner > button:hover {
   background: color-mix(in srgb, white 16%, transparent) !important;
+}
+
+/* Set on <html> by the inline script in layout.tsx and kept in sync by
+ * Banners. Keep the `html` selector: `:root[data-banner-dismissed]` rules
+ * were dropped from the CSS Next serves. */
+html[data-banner-dismissed] {
+  --fd-banner-height: 0px;
+}
+
+html[data-banner-dismissed] #shell-docs-course-banner {
+  display: none;
 }
 
 .shell-docs-nav-link-idle {

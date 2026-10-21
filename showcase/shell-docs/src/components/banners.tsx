@@ -3,6 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, MessageSquare, X } from "lucide-react";
+import {
+  BANNER_DISMISSED_ATTRIBUTE,
+  BANNER_DISMISSED_KEY,
+  BANNER_DISMISSED_TIME_KEY,
+  BANNER_REAPPEAR_DELAY,
+  LEGACY_DISMISSED_STORAGE_KEY,
+} from "@/lib/banner-dismissal";
 
 type BannerEntry = {
   mobileText: string;
@@ -20,15 +27,6 @@ const bannerContent: BannerEntry[] = [
     href: "/channels",
   },
 ];
-
-const BANNER_REAPPEAR_DELAY = 3 * 24 * 60 * 60 * 1000;
-const BANNER_DISMISSED_KEY = "nd-banner-rotating-banner";
-const BANNER_DISMISSED_TIME_KEY = "nd-banner-rotating-banner-dismissed-at";
-const LEGACY_DISMISSED_STORAGE_KEY = "shell-docs-course-banner-dismissed";
-
-function setBannerHeight(height: "0px" | "40px") {
-  document.documentElement.style.setProperty("--fd-banner-height", height);
-}
 
 export function Banners() {
   const content = bannerContent[0];
@@ -78,8 +76,14 @@ export function Banners() {
     };
   }, []);
 
+  // Until the first storage read, leave <html> as the layout's inline script
+  // marked it. globals.css derives --fd-banner-height from the attribute.
   useEffect(() => {
-    setBannerHeight(!hydrated || dismissed ? "0px" : "40px");
+    if (!hydrated) return;
+    document.documentElement.toggleAttribute(
+      BANNER_DISMISSED_ATTRIBUTE,
+      dismissed,
+    );
   }, [hydrated, dismissed]);
 
   const dismissBanner = useCallback(() => {
@@ -89,7 +93,9 @@ export function Banners() {
     setDismissed(true);
   }, []);
 
-  if (!hydrated || dismissed) {
+  // Rendered on the server too, so it's in the first paint. For a reader who
+  // dismissed it, globals.css hides it until the first storage read.
+  if (dismissed) {
     return null;
   }
 
